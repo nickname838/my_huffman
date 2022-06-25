@@ -39,6 +39,14 @@ Node *maketree(priority_queue<Node *, vector<Node *>, comp> &pq) {
     return pq.top();
 }
 
+// создание кодов по дереву
+void huffman(Node *&root, string code, map<char, string> &table) {
+    if(!root) return;
+    if(!root->left && !root->right) table[root->ch] = code;
+    huffman(root->left, code + "0", table);
+    huffman(root->right, code + "1", table);
+}
+
 // кодирование
 void encode (string file) {
     ifstream in(file, ios::binary);
@@ -55,6 +63,20 @@ void encode (string file) {
 
     // создание дерева
     Node *root = maketree(pq);
+
+    // таблца кодов
+    map<char, string> table;
+    huffman(root, "", table);
+
+    ofstream out(file + ".encoded", ios::binary);
+    if(!out) {puts("Output file doesn't exist"); exit(1);}
+
+    // запись частоты байтов
+    out << (char)(freq.size() - 1);
+    for(auto pair: freq) {
+        out << pair.first;
+        out.write((char*)&pair.second, sizeof(pair.second));
+    }
 }
 
 int main() {
