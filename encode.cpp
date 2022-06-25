@@ -2,6 +2,7 @@
 #include <fstream>
 #include <map>
 #include <queue>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -33,7 +34,7 @@ Node *maketree(priority_queue<Node *, vector<Node *>, comp> &pq) {
     while(pq.size() > 1) {
         Node *left = pq.top(); pq.pop();
         Node *right = pq.top(); pq.pop();
-        uint64_t sum = left->freq + right->freq;
+        int sum = left->freq + right->freq;
         pq.push(getnode('\0', sum, left, right));
     }
     return pq.top();
@@ -69,7 +70,7 @@ void encode (string file) {
     huffman(root, "", table);
 
     ofstream out(file + ".encoded", ios::binary);
-    if(!out) {puts("Output file doesn't exist"); exit(1);}
+    if(!out) {puts("Output file doesn't exist"); return;}
 
     // запись частоты байтов
     out << (char)(freq.size() - 1);
@@ -77,10 +78,38 @@ void encode (string file) {
         out << pair.first;
         out.write((char*)&pair.second, sizeof(pair.second));
     }
+
+    // кодирование
+    char temp = 0, count = 0;
+    while(in.get(x)) {
+        for(auto iter = table[x].begin(); iter != table[x].end(); iter++) {
+            temp |= ((*iter - '0') << (7 - count));
+            count++;
+            if(count == 8) {
+                out << temp;
+                temp = 0;
+                count = 0;
+            }
+        }
+    }
+
+    in.close();
+    out.close();
+
+    // сравнение размеров
+    struct stat sb; int bsize = 0;
+    struct stat se; int esize = 0;
+
+    stat(file.c_str(), &sb); bsize = sb.st_size;
+    stat((file + ".encoded").c_str(), &se); esize = se.st_size;
+
+    cout << "compression: " << (bsize + 0.0) / esize << endl;
 }
 
 int main() {
     string file;
     cout << "Enter file's name: ";
     cin >> file;
+    encode(file);
+    system("pause");
 }
