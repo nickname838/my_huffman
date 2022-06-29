@@ -75,6 +75,43 @@ void decode(string file) {
     // создание таблицы кодов
     map<char, string> table;
     huffman(root, "", table);
+
+    ofstream out(file.erase(file.find(".encoded")) + ".decoded", ios::binary);
+    if(!out) {puts("Output file doesn't exist"); return;}
+
+    // декодирование
+    Node *temp = root;
+    char count = 0;
+    while(in.get(x)) {
+        for(int i = 0; i < 8; i++) {
+            bool b = x & (1 << (7 - i));
+            if(b) temp = temp->right;
+            else if(!b) temp = temp->left;
+            if(!temp->left && !temp->right) {
+                out << temp->ch;
+                temp = root;
+            }
+        }
+    }
+
+    in.close();
+    out.close();
+    
+    ifstream noncod(file, ios::binary);
+    ifstream decode(file + ".decoded", ios::binary);
+
+    // сравнение файлов
+    char a, b; unsigned int equal = 0;
+    while(noncod.get(a) && decode.get(b))
+        if(a != b) equal++;
+
+    while(noncod.get(a)) equal++;
+    while(decode.get(b)) equal++;
+
+    cout << "unequal bytes: " << equal << endl;
+
+    noncod.close();
+    decode.close();
 }
 
 int main() {
