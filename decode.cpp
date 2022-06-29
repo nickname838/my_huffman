@@ -51,6 +51,30 @@ void huffman(Node *&root, string code, map<char, string> &table) {
 void decode(string file) {
     ifstream in(file, ios::binary);
     if(!in) {puts("Input file doesn't exist"); return;}
+
+    char x;
+    in.get(x); 
+    map<char, int> freq;
+
+    // чтение частоты байтов
+    for(int i = 0; i <= x; i++) {
+        char y;
+        int z;
+        in.get(y);
+        in.read((char*)&z, sizeof(z));
+        freq[y] = z;
+    }
+
+    // очередь узлов
+    priority_queue<Node *, vector<Node *>, comp> pq;
+    for(auto pair: freq) {pq.push(getnode(pair.first, pair.second));}
+
+    // созание дерева
+    Node *root = maketree(pq);
+
+    // создание таблицы кодов
+    map<char, string> table;
+    huffman(root, "", table);
 }
 
 int main() {
