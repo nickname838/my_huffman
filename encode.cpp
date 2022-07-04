@@ -93,6 +93,8 @@ void encode (string file) {
         }
     }
 
+    if(count != 0 && count < 8) out << temp;
+
     in.close();
     out.close();
 
